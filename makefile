@@ -3,3 +3,15 @@ build:
 
 run: build
 	@./bin/news-aggregator
+
+goose:
+	@goose -dir sql/schema postgres "postgres://postgres:root@localhost:5432/aggregatordb?sslmode=disable" status
+
+goose-up:
+	@goose -dir sql/schema postgres "postgres://postgres:root@localhost:5432/aggregatordb?sslmode=disable" up
+
+goose-down:
+	@goose -dir sql/schema postgres "postgres://postgres:root@localhost:5432/aggregatordb?sslmode=disable" down
+
+goose-reset:
+	@goose -dir sql/schema postgres "postgres://postgres:root@localhost:5432/aggregatordb?sslmode=disable" reset
