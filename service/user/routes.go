@@ -54,15 +54,20 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err = h.userRepo.CreateUser(r.Context(), database.CreateUserParams{
+	createdUser, err := h.userRepo.CreateUser(r.Context(), database.CreateUserParams{
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 		Username:  payload.Username,
 		Password:  hashedPassword,
 		Email:     payload.Email,
-	}); err != nil {
+	})
+	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf(""))
 		return
 	}
 
+	utils.WriteJSON(w, http.StatusCreated, types.UserInfo{
+		Username: createdUser.Username,
+		Email:    createdUser.Email,
+	})
 }

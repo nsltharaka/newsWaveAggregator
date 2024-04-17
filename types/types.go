@@ -5,3 +5,8 @@ type RegisterUserPayload struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=3,max=130"`
 }
+
+type UserInfo struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
