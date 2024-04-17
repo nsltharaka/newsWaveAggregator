@@ -17,10 +17,15 @@ func main() {
 	dbUrl := os.Getenv("DB_URL")
 	conn, err := sql.Open("postgres", dbUrl)
 	if err != nil {
-		log.Fatal("can't connect with the database")
+		log.Fatal("error with DSN")
+	}
+
+	if err := conn.Ping(); err != nil {
+		log.Fatal("database connection failed")
 	}
 
 	db := database.New(conn)
+
 	apiServer := api.NewAPIServer("localhost:3000", db)
 
 	fmt.Println("server running on port 3000...")

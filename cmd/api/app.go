@@ -29,7 +29,7 @@ func (server *APIServer) Run() error {
 	router.Use(middleware.Logger)
 
 	// user routes
-	userHandler := user.NewHandler().WithDB(server.db)
+	userHandler := user.NewHandler(server.db)
 	router.Mount("/users", userHandler.RegisterRoutes())
 
 	return http.ListenAndServe(server.addr, router)
