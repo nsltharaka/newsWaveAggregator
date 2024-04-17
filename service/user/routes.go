@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -27,21 +28,21 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	r := chi.NewRouter()
 
 	r.Post("/login", h.handleLogin)
-	r.Post("/register", withValidation(h.handleRegister))
+	r.Post("/register", h.handleRegister)
 
 	return r
 }
 
-func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("handling user login"))
-}
-
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
-	payload := r.Context().Value(payloadKey).(types.RegisterUserPayload)
+	// payload validation
+	payload, err := utils.ValidateInput(w, r, &types.RegisterUserPayload{})
+	if err != nil {
+		return
+	}
 
 	// check if user exists
-	_, err := h.userRepo.GetUserByEmail(r.Context(), payload.Email)
+	_, err = h.userRepo.GetUserByEmail(r.Context(), payload.Email)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
 		return
@@ -66,8 +67,52 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusCreated, types.UserInfo{
+	// OK respond
+	utils.WriteJSON(w, http.StatusCreated, types.UserInfoPayload{
 		Username: createdUser.Username,
 		Email:    createdUser.Email,
 	})
+}
+
+func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+
+	// payload validation
+	payload, err := utils.ValidateInput(w, r, &types.LoginUserPayload{})
+	if err != nil {
+		return
+	}
+
+	// check if the user exists
+	// otherwise error
+	user, err := h.userRepo.GetUserByEmail(r.Context(), payload.Email)
+	if err != nil {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf(
+			"user not found for the given email",
+		))
+		return
+	}
+
+	// user exists, check password
+	if !auth.VerifyPassword(user.Password, payload.Password) {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf(
+			"invalid password",
+		))
+		return
+	}
+
+	// jwt
+	secret := []byte(os.Getenv("JWT_SECRET"))
+	token, err := auth.CreateJWT(secret, int(user.ID))
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// OK respond
+	utils.WriteJSON(w, http.StatusOK, map[string]any{
+		"username": user.Username,
+		"email":    user.Email,
+		"token":    token,
+	})
+
 }

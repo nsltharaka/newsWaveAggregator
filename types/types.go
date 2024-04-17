@@ -1,12 +1,21 @@
 package types
 
+type CanValidated interface {
+	LoginUserPayload | RegisterUserPayload
+}
+
 type RegisterUserPayload struct {
 	Username string `json:"username" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=3,max=130"`
 }
 
-type UserInfo struct {
+type LoginUserPayload struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=3,max=130"`
+}
+
+type UserInfoPayload struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }
