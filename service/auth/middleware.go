@@ -43,7 +43,7 @@ func WithAuthUser(db *database.Queries) func(http.Handler) http.Handler {
 			}
 
 			// set user in the context so the handler can access user data
-			ctxWithUser := context.WithValue(r.Context(), ContextKey("authUser"), user.ID)
+			ctxWithUser := context.WithValue(r.Context(), ContextKey("authUser"), int(user.ID))
 
 			next.ServeHTTP(w, r.WithContext(ctxWithUser))
 

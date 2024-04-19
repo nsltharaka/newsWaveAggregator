@@ -6,6 +6,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/nsltharaka/newsWaveAggregator/database"
 	"github.com/nsltharaka/newsWaveAggregator/service/auth"
+	"github.com/nsltharaka/newsWaveAggregator/types"
+	"github.com/nsltharaka/newsWaveAggregator/utils"
 )
 
 type Handler struct {
@@ -23,11 +25,25 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	// middleware
 	r.Use(auth.WithAuthUser(h.db))
 
-	r.Post("/create", h.handleCreateFeed)
+	r.Post("/create-topic-feeds", h.handleCreateTopicWithFeeds)
 
 	return r
 }
 
-func (h *Handler) handleCreateFeed(w http.ResponseWriter, r *http.Request) {
-	_ = r.Context().Value(auth.ContextKey("authUser")).(int32)
+func (h *Handler) handleCreateTopicWithFeeds(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value(auth.ContextKey("authUser")).(int)
+
+	payload, err := utils.ValidateInput(w, r, &types.CreateFeedPayload{})
+	if err != nil {
+		return
+	}
+
+	performTopicTransaction(r, h.db, int32(userId), payload.Topic)
+	performFeedTransaction(r, h.db, int32(userId), payload.FeedURLs)
+
+	utils.WriteJSON(w, http.StatusOK, map[string]any{
+		"userid":  userId,
+		"payload": payload,
+	})
+
 }

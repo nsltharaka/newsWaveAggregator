@@ -1,7 +1,7 @@
 package types
 
 type CanValidated interface {
-	LoginUserPayload | RegisterUserPayload
+	LoginUserPayload | RegisterUserPayload | CreateFeedPayload
 }
 
 type RegisterUserPayload struct {
@@ -20,4 +20,9 @@ type UserInfoPayload struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	ApiKey   string `json:"api_key"`
+}
+
+type CreateFeedPayload struct {
+	Topic    string   `json:"topic" validate:"required"`
+	FeedURLs []string `json:"feeds" validate:"required,min=1,dive,required"`
 }
