@@ -8,6 +8,10 @@ insert into users(
     )
 values ($1, $2, $3, $4, $5)
 RETURNING *;
+
+-- name: GetUserByApiKey :one
+SELECT * FROM users WHERE api_key = $1;
+
 -- name: GetUserByEmail :one
 select *
 from users

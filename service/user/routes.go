@@ -3,7 +3,6 @@ package user
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -71,6 +70,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusCreated, types.UserInfoPayload{
 		Username: createdUser.Username,
 		Email:    createdUser.Email,
+		ApiKey:   createdUser.ApiKey,
 	})
 }
 
@@ -100,19 +100,11 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// jwt
-	secret := []byte(os.Getenv("JWT_SECRET"))
-	token, err := auth.CreateJWT(secret, int(user.ID))
-	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
-		return
-	}
-
 	// OK respond
 	utils.WriteJSON(w, http.StatusOK, map[string]any{
 		"username": user.Username,
 		"email":    user.Email,
-		"token":    token,
+		"api_key":  user.ApiKey,
 	})
 
 }

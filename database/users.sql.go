@@ -19,7 +19,7 @@ insert into users(
         password
     )
 values ($1, $2, $3, $4, $5)
-RETURNING id, created_at, updated_at, username, email, password
+RETURNING id, created_at, updated_at, username, email, password, api_key
 `
 
 type CreateUserParams struct {
@@ -46,12 +46,32 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Username,
 		&i.Email,
 		&i.Password,
+		&i.ApiKey,
+	)
+	return i, err
+}
+
+const getUserByApiKey = `-- name: GetUserByApiKey :one
+SELECT id, created_at, updated_at, username, email, password, api_key FROM users WHERE api_key = $1
+`
+
+func (q *Queries) GetUserByApiKey(ctx context.Context, apiKey string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByApiKey, apiKey)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+		&i.ApiKey,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-select id, created_at, updated_at, username, email, password
+select id, created_at, updated_at, username, email, password, api_key
 from users
 where email = $1
 `
@@ -66,6 +86,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Username,
 		&i.Email,
 		&i.Password,
+		&i.ApiKey,
 	)
 	return i, err
 }

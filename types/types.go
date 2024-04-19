@@ -13,9 +13,11 @@ type RegisterUserPayload struct {
 type LoginUserPayload struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=3,max=130"`
+	ApiKey   string `json:"api_key"`
 }
 
 type UserInfoPayload struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
+	ApiKey   string `json:"api_key"`
 }

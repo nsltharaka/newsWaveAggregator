@@ -6,7 +6,21 @@ package database
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
+
+type Feed struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Url       string    `json:"url"`
+}
+
+type Topic struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
 
 type User struct {
 	ID        int32     `json:"id"`
@@ -15,4 +29,21 @@ type User struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
+	ApiKey    string    `json:"api_key"`
+}
+
+type UserFeed struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	UserID    int32     `json:"user_id"`
+	FeedID    uuid.UUID `json:"feed_id"`
+}
+
+type UserTopic struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	UserID    int32     `json:"user_id"`
+	TopicID   uuid.UUID `json:"topic_id"`
 }
