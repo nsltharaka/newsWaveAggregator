@@ -29,10 +29,15 @@ func main() {
 
 	// server setup
 	PORT := os.Getenv("PORT")
-	HOST := os.Getenv("HOST")
-	apiServer := api.NewAPIServer(fmt.Sprintf("%s:%s", HOST, PORT), db)
+	host, err := os.Hostname()
+	if err != nil {
+		fmt.Println("could not retrieve hostname, using localhost")
+		host = "localhost"
+	}
 
-	fmt.Printf("server started on http://%s:%s\n", HOST, PORT)
+	apiServer := api.NewAPIServer(fmt.Sprintf("%s:%s", host, PORT), db)
+
+	fmt.Printf("server started at http://%s:%s\n", host, PORT)
 	if err := apiServer.Run(); err != nil {
 		log.Fatal(err)
 	}

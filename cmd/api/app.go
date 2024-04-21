@@ -30,6 +30,10 @@ func (server *APIServer) Run() error {
 	// middleware
 	router.Use(middleware.Logger)
 
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("running fine"))
+	})
+
 	// user routes
 	userHandler := user.NewHandler(server.db)
 	router.Mount("/users", userHandler.RegisterRoutes())
