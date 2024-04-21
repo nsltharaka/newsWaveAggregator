@@ -38,8 +38,7 @@ func (h *Handler) handleCreateTopicWithFeeds(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	performTopicTransaction(r, h.db, int32(userId), payload.Topic)
-	performFeedTransaction(r, h.db, int32(userId), payload.FeedURLs)
+	performFeedTransaction(r, h.db, int32(userId), payload)
 
 	utils.WriteJSON(w, http.StatusOK, map[string]any{
 		"userid":  userId,

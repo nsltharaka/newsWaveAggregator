@@ -25,7 +25,7 @@ func WithAuthUser(db *database.Queries) func(http.Handler) http.Handler {
 			}
 
 			authHeaderSplit := strings.Split(authorizationHeader, " ")
-			if authHeaderSplit[0] != "ApiKey" {
+			if authHeaderSplit[0] != "Bearer" {
 				utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf(
 					"malformed authorization header",
 				))

@@ -13,9 +13,16 @@ import (
 )
 
 const createFeed = `-- name: CreateFeed :one
-INSERT INTO feeds (id, created_at, updated_at, url)
-VALUES ($1, $2, $3, $4)
-RETURNING id, created_at, updated_at, url
+INSERT INTO feeds (
+        id,
+        created_at,
+        updated_at,
+        url,
+        topic_id,
+        user_id
+    )
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, created_at, updated_at, url, topic_id, user_id
 `
 
 type CreateFeedParams struct {
@@ -23,6 +30,8 @@ type CreateFeedParams struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Url       string    `json:"url"`
+	TopicID   uuid.UUID `json:"topic_id"`
+	UserID    int32     `json:"user_id"`
 }
 
 func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, error) {
@@ -31,6 +40,8 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 		arg.CreatedAt,
 		arg.UpdatedAt,
 		arg.Url,
+		arg.TopicID,
+		arg.UserID,
 	)
 	var i Feed
 	err := row.Scan(
@@ -38,6 +49,94 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Url,
+		&i.TopicID,
+		&i.UserID,
+	)
+	return i, err
+}
+
+const getAllFeedsForTopic = `-- name: GetAllFeedsForTopic :many
+SELECT DISTINCT f.url,
+    t.name
+FROM feeds f
+    JOIN user_topic ut ON f.user_id = ut.user_id
+    JOIN topics t ON ut.topic_id = t.id
+WHERE t.name = $1
+`
+
+type GetAllFeedsForTopicRow struct {
+	Url  string `json:"url"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) GetAllFeedsForTopic(ctx context.Context, name string) ([]GetAllFeedsForTopicRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllFeedsForTopic, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllFeedsForTopicRow
+	for rows.Next() {
+		var i GetAllFeedsForTopicRow
+		if err := rows.Scan(&i.Url, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllFeedsForTopicID = `-- name: GetAllFeedsForTopicID :many
+SELECT DISTINCT f.url
+FROM feeds f
+WHERE f.topic_id = $1
+`
+
+func (q *Queries) GetAllFeedsForTopicID(ctx context.Context, topicID uuid.UUID) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getAllFeedsForTopicID, topicID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var url string
+		if err := rows.Scan(&url); err != nil {
+			return nil, err
+		}
+		items = append(items, url)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFeedByURL = `-- name: GetFeedByURL :one
+SELECT id, created_at, updated_at, url, topic_id, user_id
+FROM feeds
+WHERE url = $1
+`
+
+func (q *Queries) GetFeedByURL(ctx context.Context, url string) (Feed, error) {
+	row := q.db.QueryRowContext(ctx, getFeedByURL, url)
+	var i Feed
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Url,
+		&i.TopicID,
+		&i.UserID,
 	)
 	return i, err
 }

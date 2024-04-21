@@ -6,43 +6,47 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nsltharaka/newsWaveAggregator/database"
+	"github.com/nsltharaka/newsWaveAggregator/types"
 )
 
-func performTopicTransaction(r *http.Request, db *database.Queries, userId int32, topic string) {
+func performFeedTransaction(r *http.Request, db *database.Queries, userId int32, payload *types.CreateFeedPayload) {
+
 	topicId := uuid.New()
 
-	_, _ = db.CreateTopic(r.Context(), database.CreateTopicParams{
+	existingTopic, err := db.GetTopicByName(r.Context(), payload.Topic)
+	if err == nil {
+		topicId = existingTopic.ID
+	}
+
+	db.CreateTopic(r.Context(), database.CreateTopicParams{
 		ID:   topicId,
-		Name: topic,
+		Name: payload.Topic,
 	})
 
-	_, _ = db.CreateUserTopic(r.Context(), database.CreateUserTopicParams{
-		ID:        uuid.New(),
-		CreatedAt: time.Now().UTC(),
-		UpdatedAt: time.Now().UTC(),
-		UserID:    userId,
-		TopicID:   topicId,
+	db.CreateUserTopic(r.Context(), database.CreateUserTopicParams{
+		ID:      uuid.New(),
+		UserID:  userId,
+		TopicID: topicId,
 	})
-}
 
-func performFeedTransaction(r *http.Request, db *database.Queries, userId int32, urls []string) {
-	feedId := uuid.New()
-	for _, url := range urls {
+	for _, u := range payload.FeedURLs {
 
-		_, _ = db.CreateFeed(r.Context(), database.CreateFeedParams{
+		existingFeed, err := db.GetFeedByURL(r.Context(), u)
+		if err == nil && existingFeed.UserID == userId {
+			continue
+		}
+
+		feedId := uuid.New()
+
+		db.CreateFeed(r.Context(), database.CreateFeedParams{
 			ID:        feedId,
+			Url:       u,
 			CreatedAt: time.Now().UTC(),
 			UpdatedAt: time.Now().UTC(),
-			Url:       url,
-		})
-
-		_, _ = db.CreateUserFeed(r.Context(), database.CreateUserFeedParams{
-			ID:        uuid.New(),
-			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
+			TopicID:   topicId,
 			UserID:    userId,
-			FeedID:    feedId,
 		})
 
 	}
+
 }
