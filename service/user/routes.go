@@ -2,10 +2,12 @@ package user
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nsltharaka/newsWaveAggregator/database"
 	"github.com/nsltharaka/newsWaveAggregator/service/auth"
 	"github.com/nsltharaka/newsWaveAggregator/types"
@@ -26,6 +28,8 @@ func (h *Handler) RegisterRoutes() http.Handler {
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.Logger)
+
 	r.Post("/login", h.handleLogin)
 	r.Post("/register", h.handleRegister)
 
@@ -37,6 +41,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// payload validation
 	payload, err := utils.ValidateInput(w, r, &types.RegisterUserPayload{})
 	if err != nil {
+		log.Println("error validating form data")
 		return
 	}
 
@@ -101,10 +106,10 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// OK respond
-	utils.WriteJSON(w, http.StatusOK, map[string]any{
-		"username": user.Username,
-		"email":    user.Email,
-		"api_key":  user.ApiKey,
+	utils.WriteJSON(w, http.StatusOK, types.UserInfoPayload{
+		Username: user.Username,
+		Email:    user.Email,
+		ApiKey:   user.ApiKey,
 	})
 
 }
