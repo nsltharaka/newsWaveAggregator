@@ -72,7 +72,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// OK respond
-	utils.WriteJSON(w, http.StatusCreated, types.UserInfoPayload{
+	utils.WriteJSON(w, http.StatusCreated, types.OutgoingUserPayload{
 		Username: createdUser.Username,
 		Email:    createdUser.Email,
 		ApiKey:   createdUser.ApiKey,
@@ -106,7 +106,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// OK respond
-	utils.WriteJSON(w, http.StatusOK, types.UserInfoPayload{
+	utils.WriteJSON(w, http.StatusOK, types.OutgoingUserPayload{
 		Username: user.Username,
 		Email:    user.Email,
 		ApiKey:   user.ApiKey,

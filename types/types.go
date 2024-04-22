@@ -1,8 +1,12 @@
 package types
 
 type CanValidated interface {
-	LoginUserPayload | RegisterUserPayload | CreateFeedPayload
+	LoginUserPayload |
+		RegisterUserPayload |
+		IncomingFollowTopicFeedPayload
 }
+
+/* types associated with user routes */
 
 type RegisterUserPayload struct {
 	Username string `json:"username" validate:"required"`
@@ -16,13 +20,15 @@ type LoginUserPayload struct {
 	ApiKey   string `json:"api_key"`
 }
 
-type UserInfoPayload struct {
+type OutgoingUserPayload struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	ApiKey   string `json:"api_key"`
 }
 
-type CreateFeedPayload struct {
+/* types associated with followTopicFeed routes */
+
+type IncomingFollowTopicFeedPayload struct {
 	Topic    string   `json:"topic" validate:"required"`
 	FeedURLs []string `json:"feeds" validate:"required,min=1,dive,required"`
 }

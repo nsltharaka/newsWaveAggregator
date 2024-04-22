@@ -4,10 +4,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nsltharaka/newsWaveAggregator/database"
-	"github.com/nsltharaka/newsWaveAggregator/service/feed"
-	"github.com/nsltharaka/newsWaveAggregator/service/topic"
+	"github.com/nsltharaka/newsWaveAggregator/service/followTopicFeed"
 	"github.com/nsltharaka/newsWaveAggregator/service/user"
 )
 
@@ -27,9 +25,6 @@ func (server *APIServer) Run() error {
 
 	router := chi.NewRouter()
 
-	// middleware
-	router.Use(middleware.Logger)
-
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("running fine"))
 	})
@@ -38,13 +33,9 @@ func (server *APIServer) Run() error {
 	userHandler := user.NewHandler(server.db)
 	router.Mount("/users", userHandler.RegisterRoutes())
 
-	// feed routes
-	feedHandler := feed.NewHandler(server.db)
-	router.Mount("/feeds", feedHandler.RegisterRoutes())
-
-	// topic routes
-	topicHandler := topic.NewHandler(server.db)
-	router.Mount("/topics", topicHandler.RegisterRoutes())
+	// follow_topic_feed routes
+	followTopicFeedHandler := followTopicFeed.NewHandler(server.db)
+	router.Mount("/follow-topic-feed", followTopicFeedHandler.RegisterRoutes())
 
 	return http.ListenAndServe(server.addr, router)
 

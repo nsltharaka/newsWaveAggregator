@@ -12,36 +12,26 @@ import (
 )
 
 const createTopic = `-- name: CreateTopic :one
-INSERT INTO topics (id, name)
-VALUES ($1, $2)
-RETURNING id, name
+INSERT INTO topics (id, name, created_by)
+VALUES ($1, $2, $3)
+RETURNING id, name, created_by
 `
 
 type CreateTopicParams struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	CreatedBy int32     `json:"created_by"`
 }
 
 func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic, error) {
-	row := q.db.QueryRowContext(ctx, createTopic, arg.ID, arg.Name)
+	row := q.db.QueryRowContext(ctx, createTopic, arg.ID, arg.Name, arg.CreatedBy)
 	var i Topic
-	err := row.Scan(&i.ID, &i.Name)
-	return i, err
-}
-
-const deleteTopicByID = `-- name: DeleteTopicByID :one
-DELETE FROM topics WHERE id = $1 RETURNING id, name
-`
-
-func (q *Queries) DeleteTopicByID(ctx context.Context, id uuid.UUID) (Topic, error) {
-	row := q.db.QueryRowContext(ctx, deleteTopicByID, id)
-	var i Topic
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatedBy)
 	return i, err
 }
 
 const getTopicByName = `-- name: GetTopicByName :one
-SELECT id, name
+SELECT id, name, created_by
 FROM topics
 WHERE name = $1
 `
@@ -49,6 +39,6 @@ WHERE name = $1
 func (q *Queries) GetTopicByName(ctx context.Context, name string) (Topic, error) {
 	row := q.db.QueryRowContext(ctx, getTopicByName, name)
 	var i Topic
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatedBy)
 	return i, err
 }

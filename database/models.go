@@ -15,13 +15,18 @@ type Feed struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Url       string    `json:"url"`
-	TopicID   uuid.UUID `json:"topic_id"`
-	UserID    int32     `json:"user_id"`
 }
 
 type Topic struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	CreatedBy int32     `json:"created_by"`
+}
+
+type TopicContainsFeed struct {
+	TopicID uuid.UUID `json:"topic_id"`
+	FeedID  uuid.UUID `json:"feed_id"`
+	UserID  int32     `json:"user_id"`
 }
 
 type User struct {
@@ -34,8 +39,7 @@ type User struct {
 	ApiKey    string    `json:"api_key"`
 }
 
-type UserTopic struct {
-	ID      uuid.UUID `json:"id"`
+type UserFollowsTopic struct {
 	UserID  int32     `json:"user_id"`
 	TopicID uuid.UUID `json:"topic_id"`
 }
