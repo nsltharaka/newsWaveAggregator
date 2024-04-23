@@ -43,7 +43,7 @@ func (h *Handler) handleFollowTopicFeed(w http.ResponseWriter, r *http.Request) 
 
 	h.performTransaction(r, payload, userID)
 
-	utils.WriteJSON(w, http.StatusCreated, struct{}{})
+	utils.WriteJSON(w, http.StatusCreated, nil)
 
 }
 
