@@ -43,6 +43,7 @@ func (h *Handler) getOrInsertTopic(r *http.Request, name string, userID int) uui
 			ID:        topicID,
 			Name:      name,
 			CreatedBy: int32(userID),
+			UpdatedAt: time.Now().UTC(),
 		})
 
 	} else {

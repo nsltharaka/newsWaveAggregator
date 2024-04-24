@@ -6,17 +6,22 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nsltharaka/newsWaveAggregator/database"
+	"github.com/nsltharaka/newsWaveAggregator/lib/topicImages"
 	"github.com/nsltharaka/newsWaveAggregator/service/auth"
 	"github.com/nsltharaka/newsWaveAggregator/types"
 	"github.com/nsltharaka/newsWaveAggregator/utils"
 )
 
 type Handler struct {
-	db *database.Queries
+	db          *database.Queries
+	imageFinder topicImages.ImageFinder
 }
 
 func NewHandler(db *database.Queries) *Handler {
-	return &Handler{db}
+	return &Handler{
+		db,
+		topicImages.FromNewsAPI(),
+	}
 }
 
 func (h *Handler) RegisterRoutes() http.Handler {
@@ -40,6 +45,8 @@ func (h *Handler) handleFollowTopicFeed(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		return
 	}
+
+	h.imageFinder(payload.Topic)
 
 	h.performTransaction(r, payload, userID)
 

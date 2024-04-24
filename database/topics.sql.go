@@ -7,31 +7,43 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const createTopic = `-- name: CreateTopic :one
-INSERT INTO topics (id, name, created_by)
-VALUES ($1, $2, $3)
-RETURNING id, name, created_by
+INSERT INTO topics (id, name, created_by, updated_at)
+VALUES ($1, $2, $3, $4)
+RETURNING id, name, updated_at, created_by
 `
 
 type CreateTopicParams struct {
 	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
 	CreatedBy int32     `json:"created_by"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic, error) {
-	row := q.db.QueryRowContext(ctx, createTopic, arg.ID, arg.Name, arg.CreatedBy)
+	row := q.db.QueryRowContext(ctx, createTopic,
+		arg.ID,
+		arg.Name,
+		arg.CreatedBy,
+		arg.UpdatedAt,
+	)
 	var i Topic
-	err := row.Scan(&i.ID, &i.Name, &i.CreatedBy)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+	)
 	return i, err
 }
 
 const getTopicByName = `-- name: GetTopicByName :one
-SELECT id, name, created_by
+SELECT id, name, updated_at, created_by
 FROM topics
 WHERE name = $1
 `
@@ -39,6 +51,11 @@ WHERE name = $1
 func (q *Queries) GetTopicByName(ctx context.Context, name string) (Topic, error) {
 	row := q.db.QueryRowContext(ctx, getTopicByName, name)
 	var i Topic
-	err := row.Scan(&i.ID, &i.Name, &i.CreatedBy)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+	)
 	return i, err
 }

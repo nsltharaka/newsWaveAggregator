@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/nsltharaka/newsWaveAggregator/database"
 	"github.com/nsltharaka/newsWaveAggregator/service/followTopicFeed"
+	"github.com/nsltharaka/newsWaveAggregator/service/topic"
 	"github.com/nsltharaka/newsWaveAggregator/service/user"
 )
 
@@ -32,6 +33,10 @@ func (server *APIServer) Run() error {
 	// user routes
 	userHandler := user.NewHandler(server.db)
 	router.Mount("/users", userHandler.RegisterRoutes())
+
+	// topic routes
+	topicHandler := topic.NewHandler(server.db)
+	router.Mount("/topics", topicHandler.RegisterRoutes())
 
 	// follow_topic_feed routes
 	followTopicFeedHandler := followTopicFeed.NewHandler(server.db)
