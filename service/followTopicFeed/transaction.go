@@ -1,6 +1,7 @@
 package followTopicFeed
 
 import (
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -42,6 +43,7 @@ func (h *Handler) getOrInsertTopic(r *http.Request, name string, userID int) uui
 		_, _ = h.db.CreateTopic(r.Context(), database.CreateTopicParams{
 			ID:        topicID,
 			Name:      name,
+			ImgUrl:    sql.NullString{},
 			CreatedBy: int32(userID),
 			UpdatedAt: time.Now().UTC(),
 		})

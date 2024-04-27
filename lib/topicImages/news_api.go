@@ -9,44 +9,29 @@ import (
 	"slices"
 )
 
-/*
-
-finding an image for a topic.
-
-current method:
-	use the news api to search for articles about that topic and get one of the articles from there and get it's cover image.
-	drawbacks:
-		logos are there. specially in BBC - may be need to filter them out
-		image might be irrelevant to the topic.
-
-*/
-
-func FromNewsAPI() ImageFinder {
+func FromNewsAPI(topic string) ([]string, error) {
 
 	apiUrl, _ := url.Parse("https://newsapi.org/v2/everything")
 	q := apiUrl.Query()
 	q.Set("apiKey", os.Getenv("NEWS_API_KEY"))
+	q.Set("q", topic)
+	q.Set("pageSize", "10")
 
-	return func(topic string) (imageUrl []string, err error) {
+	apiUrl.RawQuery = q.Encode()
 
-		q.Set("q", topic)
-		q.Set("pageSize", "10")
-		apiUrl.RawQuery = q.Encode()
-
-		newsApiResponse, err := fetchData(apiUrl.String())
-		if err != nil {
-			return nil, err
-		}
-
-		imageUrls := []string{}
-		for _, article := range newsApiResponse.Articles {
-			if slices.Index(imageUrls, article.ImageUrl) == -1 {
-				imageUrls = append(imageUrls, article.ImageUrl)
-			}
-		}
-
-		return imageUrls, nil
+	newsApiResponse, err := fetchData(apiUrl.String())
+	if err != nil {
+		return nil, err
 	}
+
+	imageUrls := []string{}
+	for _, article := range newsApiResponse.Articles {
+		if slices.Index(imageUrls, article.ImageUrl) == -1 {
+			imageUrls = append(imageUrls, article.ImageUrl)
+		}
+	}
+
+	return imageUrls, nil
 }
 
 func fetchData(apiUrl string) (*newsApiResponse, error) {

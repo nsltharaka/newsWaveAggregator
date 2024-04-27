@@ -5,6 +5,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,10 +19,11 @@ type Feed struct {
 }
 
 type Topic struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	UpdatedAt time.Time `json:"updated_at"`
-	CreatedBy int32     `json:"created_by"`
+	ID        uuid.UUID      `json:"id"`
+	Name      string         `json:"name"`
+	ImgUrl    sql.NullString `json:"img_url"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	CreatedBy int32          `json:"created_by"`
 }
 
 type TopicContainsFeed struct {

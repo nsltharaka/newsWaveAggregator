@@ -32,3 +32,5 @@ type IncomingFollowTopicFeedPayload struct {
 	Topic    string   `json:"topic" validate:"required"`
 	FeedURLs []string `json:"feeds" validate:"required,min=1,dive,required"`
 }
+
+/* types related to topic routes */

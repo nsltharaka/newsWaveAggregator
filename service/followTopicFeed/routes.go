@@ -14,13 +14,14 @@ import (
 
 type Handler struct {
 	db          *database.Queries
-	imageFinder topicImages.ImageFinder
+	imageFinder *topicImages.ImageFinder
 }
 
 func NewHandler(db *database.Queries) *Handler {
+
 	return &Handler{
-		db,
-		topicImages.FromNewsAPI(),
+		db:          db,
+		imageFinder: topicImages.NewImageFinder(topicImages.FromNewsAPI),
 	}
 }
 
@@ -30,7 +31,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(auth.WithAuthUser(h.db))
 
-	r.Post("/", h.handleFollowTopicFeed)
+	r.Post("/create", h.handleFollowTopicFeed)
 	r.Get("/all", h.handleGetAllFeedsForUser)
 
 	return r
@@ -46,11 +47,11 @@ func (h *Handler) handleFollowTopicFeed(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.imageFinder(payload.Topic)
-
 	h.performTransaction(r, payload, userID)
 
 	utils.WriteJSON(w, http.StatusCreated, nil)
+
+	go h.imageFinder.UpdateTopic(h.db, payload.Topic)
 
 }
 

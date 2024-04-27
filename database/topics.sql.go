@@ -7,28 +7,31 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 const createTopic = `-- name: CreateTopic :one
-INSERT INTO topics (id, name, created_by, updated_at)
-VALUES ($1, $2, $3, $4)
-RETURNING id, name, updated_at, created_by
+INSERT INTO topics (id, name, img_url, created_by, updated_at)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id, name, img_url, updated_at, created_by
 `
 
 type CreateTopicParams struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	CreatedBy int32     `json:"created_by"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        uuid.UUID      `json:"id"`
+	Name      string         `json:"name"`
+	ImgUrl    sql.NullString `json:"img_url"`
+	CreatedBy int32          `json:"created_by"`
+	UpdatedAt time.Time      `json:"updated_at"`
 }
 
 func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic, error) {
 	row := q.db.QueryRowContext(ctx, createTopic,
 		arg.ID,
 		arg.Name,
+		arg.ImgUrl,
 		arg.CreatedBy,
 		arg.UpdatedAt,
 	)
@@ -36,6 +39,7 @@ func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.ImgUrl,
 		&i.UpdatedAt,
 		&i.CreatedBy,
 	)
@@ -43,7 +47,7 @@ func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic
 }
 
 const getTopicByName = `-- name: GetTopicByName :one
-SELECT id, name, updated_at, created_by
+SELECT id, name, img_url, updated_at, created_by
 FROM topics
 WHERE name = $1
 `
@@ -54,6 +58,29 @@ func (q *Queries) GetTopicByName(ctx context.Context, name string) (Topic, error
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.ImgUrl,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+	)
+	return i, err
+}
+
+const updateTopicImage = `-- name: UpdateTopicImage :one
+UPDATE topics SET img_url = $1 WHERE name = $2 RETURNING id, name, img_url, updated_at, created_by
+`
+
+type UpdateTopicImageParams struct {
+	ImgUrl sql.NullString `json:"img_url"`
+	Name   string         `json:"name"`
+}
+
+func (q *Queries) UpdateTopicImage(ctx context.Context, arg UpdateTopicImageParams) (Topic, error) {
+	row := q.db.QueryRowContext(ctx, updateTopicImage, arg.ImgUrl, arg.Name)
+	var i Topic
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.ImgUrl,
 		&i.UpdatedAt,
 		&i.CreatedBy,
 	)
