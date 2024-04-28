@@ -46,6 +46,55 @@ func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic
 	return i, err
 }
 
+const getAllTopicsForUserWithSourceCount = `-- name: GetAllTopicsForUserWithSourceCount :many
+SELECT t.id, t.name, t.img_url, t.updated_at, t.created_by, COUNT(DISTINCT tcf.feed_id) AS feed_count
+FROM Topics t
+INNER JOIN User_Follows_Topic uft ON t.id = uft.topic_id
+LEFT JOIN Topic_Contains_Feed tcf ON t.id = tcf.topic_id AND uft.user_id = tcf.user_id  -- Use LEFT JOIN for optional matching
+WHERE uft.user_id = $1
+GROUP BY t.id
+ORDER BY t.updated_at DESC
+`
+
+type GetAllTopicsForUserWithSourceCountRow struct {
+	ID        uuid.UUID      `json:"id"`
+	Name      string         `json:"name"`
+	ImgUrl    sql.NullString `json:"img_url"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	CreatedBy int32          `json:"created_by"`
+	FeedCount int64          `json:"feed_count"`
+}
+
+func (q *Queries) GetAllTopicsForUserWithSourceCount(ctx context.Context, userID int32) ([]GetAllTopicsForUserWithSourceCountRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllTopicsForUserWithSourceCount, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllTopicsForUserWithSourceCountRow
+	for rows.Next() {
+		var i GetAllTopicsForUserWithSourceCountRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ImgUrl,
+			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.FeedCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTopicByName = `-- name: GetTopicByName :one
 SELECT id, name, img_url, updated_at, created_by
 FROM topics
@@ -66,7 +115,10 @@ func (q *Queries) GetTopicByName(ctx context.Context, name string) (Topic, error
 }
 
 const updateTopicImage = `-- name: UpdateTopicImage :one
-UPDATE topics SET img_url = $1 WHERE name = $2 RETURNING id, name, img_url, updated_at, created_by
+UPDATE topics
+SET img_url = $1
+WHERE name = $2
+RETURNING id, name, img_url, updated_at, created_by
 `
 
 type UpdateTopicImageParams struct {

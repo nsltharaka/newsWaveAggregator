@@ -1,5 +1,11 @@
 package types
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
 type CanValidated interface {
 	LoginUserPayload |
 		RegisterUserPayload |
@@ -34,3 +40,10 @@ type IncomingFollowTopicFeedPayload struct {
 }
 
 /* types related to topic routes */
+type OutgoingTopicPayload struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	ImgUrl      string    `json:"img_url"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	SourceCount int       `json:"source_count"`
+}
