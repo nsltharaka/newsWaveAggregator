@@ -2,7 +2,6 @@ package user
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -41,7 +40,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// payload validation
 	payload, err := utils.ValidateInput(w, r, &types.RegisterUserPayload{})
 	if err != nil {
-		log.Println("error validating form data")
 		return
 	}
 

@@ -48,7 +48,7 @@ func ValidateInput[T types.CanValidated](
 	// validation
 	if err := Validate.Struct(payload); err != nil {
 		WriteError(w, http.StatusBadRequest, fmt.Errorf(
-			"payload validation failed, please refer to the api documentation",
+			"validation - payload validation failed, please refer to the api documentation",
 		))
 		return nil, err
 	}
