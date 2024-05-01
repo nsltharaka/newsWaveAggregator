@@ -21,7 +21,7 @@ func NewHandler(db *database.Queries) *Handler {
 
 	return &Handler{
 		db:          db,
-		imageFinder: topicImages.NewImageFinder(topicImages.FromPixabay),
+		imageFinder: topicImages.NewImageFinder(topicImages.FromGoogleImages),
 	}
 }
 
