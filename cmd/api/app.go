@@ -26,7 +26,7 @@ func (server *APIServer) Run() error {
 
 	router := chi.NewRouter()
 
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("running fine"))
 	})
 
