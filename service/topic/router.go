@@ -1,6 +1,7 @@
 package topic
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -28,6 +29,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 
 	router.Get("/", h.handleGetALlTopicsForUser)
 	router.Get("/all", h.handleGetALlTopics)
+	router.Get("/{topicId}", h.handleGetTopic)
 
 	return router
 
@@ -62,4 +64,17 @@ func (h *Handler) handleGetALlTopicsForUser(w http.ResponseWriter, r *http.Reque
 
 func (h *Handler) handleGetALlTopics(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("get all topics"))
+}
+
+func (h *Handler) handleGetTopic(w http.ResponseWriter, r *http.Request) {
+
+	userID := r.Context().Value(auth.ContextKey("authUser")).(int)
+	topicId := chi.URLParam(r, "topicId")
+
+	// get all the details about this topic.
+	// may include all the feeds user added under this topic.
+	_ = userID
+
+	fmt.Println(topicId)
+	w.WriteHeader(http.StatusOK)
 }
