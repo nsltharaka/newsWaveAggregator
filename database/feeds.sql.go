@@ -13,9 +13,16 @@ import (
 )
 
 const createFeed = `-- name: CreateFeed :one
-INSERT INTO feeds (id, created_at, updated_at, url)
+INSERT INTO
+    feeds (
+        id,
+        created_at,
+        updated_at,
+        url
+    )
 VALUES ($1, $2, $3, $4)
-RETURNING id, created_at, updated_at, url
+RETURNING
+    id, created_at, updated_at, url
 `
 
 type CreateFeedParams struct {
@@ -44,11 +51,15 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 
 const getAllFeedsGroupedByTopic = `-- name: GetAllFeedsGroupedByTopic :many
 SELECT t.name AS topic_name, f.url
-FROM Topics t
-INNER JOIN topic_contains_feed tcf ON t.id= tcf.topic_id
-INNER JOIN feeds f ON tcf.feed_id = f.id
-WHERE tcf.user_id = $1
-GROUP BY t.name, f.url
+FROM
+    Topics t
+    INNER JOIN topic_contains_feed tcf ON t.id = tcf.topic_id
+    INNER JOIN feeds f ON tcf.feed_id = f.id
+WHERE
+    tcf.user_id = $1
+GROUP BY
+    t.name,
+    f.url
 ORDER BY t.name
 `
 
@@ -81,9 +92,7 @@ func (q *Queries) GetAllFeedsGroupedByTopic(ctx context.Context, userID int32) (
 }
 
 const getFeedByURL = `-- name: GetFeedByURL :one
-SELECT id, created_at, updated_at, url
-FROM feeds
-WHERE url = $1
+SELECT id, created_at, updated_at, url FROM feeds WHERE url = $1
 `
 
 func (q *Queries) GetFeedByURL(ctx context.Context, url string) (Feed, error) {
@@ -96,4 +105,47 @@ func (q *Queries) GetFeedByURL(ctx context.Context, url string) (Feed, error) {
 		&i.Url,
 	)
 	return i, err
+}
+
+const getFeedsForUserTopic = `-- name: GetFeedsForUserTopic :many
+SELECT f.id, f.url
+FROM
+    feeds f
+    INNER JOIN topic_contains_feed tcf ON tcf.feed_id = f.id
+WHERE
+    tcf.topic_id = $1
+    AND tcf.user_id = $2
+`
+
+type GetFeedsForUserTopicParams struct {
+	TopicID uuid.UUID `json:"topic_id"`
+	UserID  int32     `json:"user_id"`
+}
+
+type GetFeedsForUserTopicRow struct {
+	ID  uuid.UUID `json:"id"`
+	Url string    `json:"url"`
+}
+
+func (q *Queries) GetFeedsForUserTopic(ctx context.Context, arg GetFeedsForUserTopicParams) ([]GetFeedsForUserTopicRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFeedsForUserTopic, arg.TopicID, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFeedsForUserTopicRow
+	for rows.Next() {
+		var i GetFeedsForUserTopicRow
+		if err := rows.Scan(&i.ID, &i.Url); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

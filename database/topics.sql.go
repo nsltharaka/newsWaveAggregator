@@ -14,9 +14,17 @@ import (
 )
 
 const createTopic = `-- name: CreateTopic :one
-INSERT INTO topics (id, name, img_url, created_by, updated_at)
+INSERT INTO
+    topics (
+        id,
+        name,
+        img_url,
+        created_by,
+        updated_at
+    )
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, name, img_url, updated_at, created_by
+RETURNING
+    id, name, img_url, updated_at, created_by
 `
 
 type CreateTopicParams struct {
@@ -48,11 +56,15 @@ func (q *Queries) CreateTopic(ctx context.Context, arg CreateTopicParams) (Topic
 
 const getAllTopicsForUserWithSourceCount = `-- name: GetAllTopicsForUserWithSourceCount :many
 SELECT t.id, t.name, t.img_url, t.updated_at, t.created_by, COUNT(DISTINCT tcf.feed_id) AS feed_count
-FROM Topics t
-INNER JOIN User_Follows_Topic uft ON t.id = uft.topic_id
-LEFT JOIN Topic_Contains_Feed tcf ON t.id = tcf.topic_id AND uft.user_id = tcf.user_id  -- Use LEFT JOIN for optional matching
-WHERE uft.user_id = $1
-GROUP BY t.id
+FROM
+    Topics t
+    INNER JOIN User_Follows_Topic uft ON t.id = uft.topic_id
+    LEFT JOIN Topic_Contains_Feed tcf ON t.id = tcf.topic_id
+    AND uft.user_id = tcf.user_id -- Use LEFT JOIN for optional matching
+WHERE
+    uft.user_id = $1
+GROUP BY
+    t.id
 ORDER BY t.updated_at DESC
 `
 
@@ -95,10 +107,25 @@ func (q *Queries) GetAllTopicsForUserWithSourceCount(ctx context.Context, userID
 	return items, nil
 }
 
+const getTopic = `-- name: GetTopic :one
+SELECT id, name, img_url, updated_at, created_by FROM topics WHERE id = $1
+`
+
+func (q *Queries) GetTopic(ctx context.Context, id uuid.UUID) (Topic, error) {
+	row := q.db.QueryRowContext(ctx, getTopic, id)
+	var i Topic
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.ImgUrl,
+		&i.UpdatedAt,
+		&i.CreatedBy,
+	)
+	return i, err
+}
+
 const getTopicByName = `-- name: GetTopicByName :one
-SELECT id, name, img_url, updated_at, created_by
-FROM topics
-WHERE name = $1
+SELECT id, name, img_url, updated_at, created_by FROM topics WHERE name = $1
 `
 
 func (q *Queries) GetTopicByName(ctx context.Context, name string) (Topic, error) {
@@ -115,10 +142,7 @@ func (q *Queries) GetTopicByName(ctx context.Context, name string) (Topic, error
 }
 
 const updateTopicImage = `-- name: UpdateTopicImage :one
-UPDATE topics
-SET img_url = $1
-WHERE name = $2
-RETURNING id, name, img_url, updated_at, created_by
+UPDATE topics SET img_url = $1 WHERE name = $2 RETURNING id, name, img_url, updated_at, created_by
 `
 
 type UpdateTopicImageParams struct {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 	"github.com/nsltharaka/newsWaveAggregator/database"
 	"github.com/nsltharaka/newsWaveAggregator/service/auth"
 	"github.com/nsltharaka/newsWaveAggregator/types"
@@ -67,14 +68,40 @@ func (h *Handler) handleGetALlTopics(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleGetTopic(w http.ResponseWriter, r *http.Request) {
-
-	userID := r.Context().Value(auth.ContextKey("authUser")).(int)
-	topicId := chi.URLParam(r, "topicId")
-
 	// get all the details about this topic.
 	// may include all the feeds user added under this topic.
-	_ = userID
 
-	fmt.Println(topicId)
-	w.WriteHeader(http.StatusOK)
+	userID := r.Context().Value(auth.ContextKey("authUser")).(int)
+	topicId, err := uuid.Parse(chi.URLParam(r, "topicId"))
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid topic id"))
+		return
+	}
+
+	// get the topic
+	topic, err := h.db.GetTopic(r.Context(), topicId)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("topic cannot be found for given id"))
+		return
+	}
+
+	// and all the feeds of it
+	feeds, _ := h.db.GetFeedsForUserTopic(r.Context(), database.GetFeedsForUserTopicParams{
+		TopicID: topicId,
+		UserID:  int32(userID),
+	})
+
+	resp := map[string]any{
+		"topic": types.OutgoingTopicPayload{
+			ID:          topic.ID,
+			Name:        topic.Name,
+			ImgUrl:      topic.ImgUrl.String,
+			UpdatedAt:   topic.UpdatedAt,
+			SourceCount: len(feeds),
+		},
+
+		"feeds": feeds,
+	}
+
+	utils.WriteJSON(w, http.StatusOK, resp)
 }

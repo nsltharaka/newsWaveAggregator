@@ -18,6 +18,15 @@ type Feed struct {
 	Url       string    `json:"url"`
 }
 
+type Post struct {
+	PostID      uuid.UUID      `json:"post_id"`
+	Title       string         `json:"title"`
+	Description sql.NullString `json:"description"`
+	PubDate     sql.NullTime   `json:"pub_date"`
+	Url         sql.NullString `json:"url"`
+	FeedID      uuid.UUID      `json:"feed_id"`
+}
+
 type Topic struct {
 	ID        uuid.UUID      `json:"id"`
 	Name      string         `json:"name"`
