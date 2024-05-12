@@ -32,6 +32,20 @@ func (q *Queries) CreateTopicContainsFeed(ctx context.Context, arg CreateTopicCo
 	return i, err
 }
 
+const deleteTopicContainsFeed = `-- name: DeleteTopicContainsFeed :exec
+DELETE FROM topic_contains_feed WHERE topic_id = $1 AND user_id = $2
+`
+
+type DeleteTopicContainsFeedParams struct {
+	TopicID uuid.UUID `json:"topic_id"`
+	UserID  int32     `json:"user_id"`
+}
+
+func (q *Queries) DeleteTopicContainsFeed(ctx context.Context, arg DeleteTopicContainsFeedParams) error {
+	_, err := q.db.ExecContext(ctx, deleteTopicContainsFeed, arg.TopicID, arg.UserID)
+	return err
+}
+
 const getTopicContainsFeed = `-- name: GetTopicContainsFeed :one
 SELECT topic_id, feed_id, user_id
 FROM topic_contains_feed

@@ -31,6 +31,8 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	router.Get("/", h.handleGetALlTopicsForUser)
 	router.Get("/all", h.handleGetALlTopics)
 	router.Get("/{topicId}", h.handleGetTopic)
+	router.Put("/{topicId}", h.handleUpdateTopic)
+	router.Delete("/{topicId}", h.handleUnfollowTopic)
 
 	return router
 
@@ -104,4 +106,61 @@ func (h *Handler) handleGetTopic(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, resp)
+}
+
+func (h *Handler) handleUpdateTopic(w http.ResponseWriter, r *http.Request) {
+
+	// which user request the edit
+	userID := r.Context().Value(auth.ContextKey("authUser")).(int)
+
+	// which topic to edit
+	topicId, err := uuid.Parse(chi.URLParam(r, "topicId"))
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid topic id"))
+		return
+	}
+
+	// handle database logic to edit topic here.
+
+	utils.WriteJSON(w, http.StatusOK, map[string]any{
+		"user":    userID,
+		"topic":   topicId,
+		"working": "working",
+	})
+
+}
+
+func (h *Handler) handleUnfollowTopic(w http.ResponseWriter, r *http.Request) {
+	// which user request the edit
+	userID := r.Context().Value(auth.ContextKey("authUser")).(int)
+
+	// which topic to edit
+	topicId, err := uuid.Parse(chi.URLParam(r, "topicId"))
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid topic id"))
+		return
+	}
+
+	// handle database logic to edit topic here.
+	if err := h.db.DeleteTopicContainsFeed(r.Context(), database.DeleteTopicContainsFeedParams{
+		TopicID: topicId,
+		UserID:  int32(userID),
+	}); err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed with : %w", err))
+		return
+	}
+
+	if err := h.db.DeleteUserFollowTopic(r.Context(), database.DeleteUserFollowTopicParams{
+		TopicID: topicId,
+		UserID:  int32(userID),
+	}); err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed with : %w", err))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]any{
+		"user":   userID,
+		"topic":  topicId,
+		"action": "delete topic",
+	})
 }
