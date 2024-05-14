@@ -120,12 +120,21 @@ func (h *Handler) handleUpdateTopic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get the request payload
+
+	payload, err := utils.ValidateInput(w, r, &types.IncomingFollowTopicFeedPayload{})
+	if err != nil {
+		return
+	}
+
 	// handle database logic to edit topic here.
+	if err := h.handleUpdateTopicLogic(r.Context(), userID, topicId, payload); err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("failed with : %w", err))
+		return
+	}
 
 	utils.WriteJSON(w, http.StatusOK, map[string]any{
-		"user":    userID,
-		"topic":   topicId,
-		"working": "working",
+		"msg": "topic updated",
 	})
 
 }
