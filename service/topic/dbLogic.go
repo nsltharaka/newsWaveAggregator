@@ -64,7 +64,6 @@ func (h *Handler) handleUpdateTopicLogic(
 			h.db.CreateFeed(ctx, database.CreateFeedParams{
 				ID:        newFeedId,
 				CreatedAt: time.Now().UTC(),
-				UpdatedAt: time.Now().UTC(),
 				Url:       feed,
 			})
 		} else {
