@@ -15,3 +15,5 @@ goose-down:
 
 goose-reset:
 	@goose -dir sql/schema postgres "postgres://postgres:root@localhost:5432/aggregatordb?sslmode=disable" reset
+
+goose-update: goose-reset goose-up

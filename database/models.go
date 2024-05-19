@@ -22,8 +22,10 @@ type Post struct {
 	PostID      uuid.UUID      `json:"post_id"`
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
-	PubDate     sql.NullTime   `json:"pub_date"`
-	Url         sql.NullString `json:"url"`
+	Author      sql.NullString `json:"author"`
+	PubDate     time.Time      `json:"pub_date"`
+	PostImage   sql.NullString `json:"post_image"`
+	Url         string         `json:"url"`
 	FeedID      uuid.UUID      `json:"feed_id"`
 }
 
