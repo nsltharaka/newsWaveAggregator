@@ -1,10 +1,14 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/nsltharaka/newsWaveAggregator/aggregator"
 	"github.com/nsltharaka/newsWaveAggregator/database"
+	"github.com/nsltharaka/newsWaveAggregator/service/feed"
 	"github.com/nsltharaka/newsWaveAggregator/service/followTopicFeed"
 	"github.com/nsltharaka/newsWaveAggregator/service/topic"
 	"github.com/nsltharaka/newsWaveAggregator/service/user"
@@ -30,6 +34,10 @@ func (server *APIServer) Run() error {
 		w.Write([]byte("running fine"))
 	})
 
+	router.HandleFunc("/refresh", func(w http.ResponseWriter, r *http.Request) {
+
+	})
+
 	// user routes
 	userHandler := user.NewHandler(server.db)
 	router.Mount("/users", userHandler.RegisterRoutes())
@@ -38,9 +46,19 @@ func (server *APIServer) Run() error {
 	topicHandler := topic.NewHandler(server.db)
 	router.Mount("/topics", topicHandler.RegisterRoutes())
 
+	// feed routes
+	feedHandler := feed.NewHandler(server.db)
+	router.Mount("/feeds", feedHandler.RegisterRoutes())
+
 	// follow_topic_feed routes
 	followTopicFeedHandler := followTopicFeed.NewHandler(server.db)
 	router.Mount("/follow-topic-feed", followTopicFeedHandler.RegisterRoutes())
+
+	// Aggregator start
+	go func() {
+		fmt.Printf("aggregator started...")
+		aggregator.StartAggregation(2, 30*time.Minute)
+	}()
 
 	return http.ListenAndServe(server.addr, router)
 

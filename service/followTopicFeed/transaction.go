@@ -68,7 +68,6 @@ func (h *Handler) insertFeed(r *http.Request, url string) uuid.UUID {
 	_, _ = h.db.CreateFeed(r.Context(), database.CreateFeedParams{
 		ID:        feedID,
 		CreatedAt: time.Now().UTC(),
-		UpdatedAt: time.Now().UTC(),
 		Url:       url,
 	})
 	return feedID
