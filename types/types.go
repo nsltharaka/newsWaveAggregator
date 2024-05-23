@@ -47,3 +47,18 @@ type OutgoingTopicPayload struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 	SourceCount int       `json:"source_count"`
 }
+
+/* types associated with followTopicFeed routes */
+
+type OutGoingPostPayload struct {
+	PostID      uuid.UUID `json:"post_id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Author      string    `json:"author"`
+	PubDate     time.Time `json:"pub_date"`
+	PostImage   string    `json:"post_image"`
+	Url         string    `json:"url"`
+	FeedID      uuid.UUID `json:"feed_id"`
+	FeedUrl     string    `json:"feed_url"`
+	Topic       string    `json:"topic"`
+}

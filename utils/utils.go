@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/nsltharaka/newsWaveAggregator/database"
 	"github.com/nsltharaka/newsWaveAggregator/types"
 )
 
@@ -54,5 +55,37 @@ func ValidateInput[T types.CanValidated](
 	}
 
 	return payload, nil
+
+}
+
+func PostToPostPayload(row database.GetAllTopicsWithLimitAndOffsetRow) types.OutGoingPostPayload {
+
+	description := ""
+	if row.Description.Valid {
+		description = row.Description.String
+	}
+
+	author := ""
+	if row.Author.Valid {
+		author = row.Author.String
+	}
+
+	postImage := ""
+	if row.PostImage.Valid {
+		postImage = row.PostImage.String
+	}
+
+	return types.OutGoingPostPayload{
+		PostID:      row.PostID,
+		Title:       row.Title,
+		Description: description,
+		Author:      author,
+		PubDate:     row.PubDate,
+		PostImage:   postImage,
+		Url:         row.Url,
+		FeedID:      row.FeedID,
+		FeedUrl:     row.FeedUrl,
+		Topic:       row.TopicName,
+	}
 
 }

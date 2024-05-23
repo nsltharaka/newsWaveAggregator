@@ -74,3 +74,68 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 	)
 	return i, err
 }
+
+const getAllTopicsWithLimitAndOffset = `-- name: GetAllTopicsWithLimitAndOffset :many
+SELECT p.post_id, p.title, p.description, p.author, p.pub_date, p.post_image, p.url, p.feed_id, f.url AS feed_url, t.name AS topic_name
+FROM posts p
+INNER JOIN feeds f ON p.feed_id = f.id
+INNER JOIN topic_contains_feed tcf ON f.id = tcf.feed_id
+INNER JOIN user_follows_topic uft ON tcf.topic_id = uft.topic_id
+INNER JOIN topics t ON tcf.topic_id = t.id
+WHERE uft.user_id = $1
+ORDER BY p.pub_date DESC  -- Order by latest posts first (optional)
+LIMIT $2 OFFSET $3
+`
+
+type GetAllTopicsWithLimitAndOffsetParams struct {
+	UserID int32 `json:"user_id"`
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type GetAllTopicsWithLimitAndOffsetRow struct {
+	PostID      uuid.UUID      `json:"post_id"`
+	Title       string         `json:"title"`
+	Description sql.NullString `json:"description"`
+	Author      sql.NullString `json:"author"`
+	PubDate     time.Time      `json:"pub_date"`
+	PostImage   sql.NullString `json:"post_image"`
+	Url         string         `json:"url"`
+	FeedID      uuid.UUID      `json:"feed_id"`
+	FeedUrl     string         `json:"feed_url"`
+	TopicName   string         `json:"topic_name"`
+}
+
+func (q *Queries) GetAllTopicsWithLimitAndOffset(ctx context.Context, arg GetAllTopicsWithLimitAndOffsetParams) ([]GetAllTopicsWithLimitAndOffsetRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllTopicsWithLimitAndOffset, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllTopicsWithLimitAndOffsetRow
+	for rows.Next() {
+		var i GetAllTopicsWithLimitAndOffsetRow
+		if err := rows.Scan(
+			&i.PostID,
+			&i.Title,
+			&i.Description,
+			&i.Author,
+			&i.PubDate,
+			&i.PostImage,
+			&i.Url,
+			&i.FeedID,
+			&i.FeedUrl,
+			&i.TopicName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
