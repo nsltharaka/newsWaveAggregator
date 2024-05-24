@@ -114,6 +114,7 @@ func ScrapeFeeds(wg *sync.WaitGroup, db *database.Queries, feed database.Feed) {
 			Description: description,
 			Author:      authors,
 			PubDate:     *item.PublishedParsed,
+			FetchedAt:   time.Now().UTC(),
 			PostImage:   imgUrl,
 			Url:         item.Link,
 			FeedID:      feed.ID,

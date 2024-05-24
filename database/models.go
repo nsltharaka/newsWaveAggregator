@@ -26,6 +26,7 @@ type Post struct {
 	PubDate     time.Time      `json:"pub_date"`
 	PostImage   sql.NullString `json:"post_image"`
 	Url         string         `json:"url"`
+	FetchedAt   time.Time      `json:"fetched_at"`
 	FeedID      uuid.UUID      `json:"feed_id"`
 }
 

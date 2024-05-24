@@ -7,6 +7,7 @@ CREATE TABLE posts (
     pub_date timestamp not null,
     post_image text,
     url text unique not null,
+    fetched_at TIMESTAMP not null,
     feed_id UUID not null references feeds (id) on delete CASCADE
 );
 -- +goose Down

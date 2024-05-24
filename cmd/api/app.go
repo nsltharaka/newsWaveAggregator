@@ -1,9 +1,12 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/nsltharaka/newsWaveAggregator/aggregator"
 	"github.com/nsltharaka/newsWaveAggregator/database"
 	"github.com/nsltharaka/newsWaveAggregator/service/feed"
 	"github.com/nsltharaka/newsWaveAggregator/service/followTopicFeed"
@@ -57,10 +60,10 @@ func (server *APIServer) Run() error {
 	router.Mount("/posts", postHandler.RegisterRoutes())
 
 	// Aggregator start
-	// go func() {
-	// 	fmt.Printf("aggregator started...")
-	// 	aggregator.StartAggregation(2, 30*time.Minute)
-	// }()
+	go func() {
+		fmt.Printf("aggregator started...")
+		aggregator.StartAggregation(2, 1*time.Hour)
+	}()
 
 	return http.ListenAndServe(server.addr, router)
 

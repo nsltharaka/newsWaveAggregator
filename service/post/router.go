@@ -59,7 +59,7 @@ func (h *Handler) handleGetAllPosts(w http.ResponseWriter, r *http.Request) {
 
 	// next page link if available
 	next := ""
-	if len(resultSet) > 0 {
+	if len(resultSet) == limit {
 		next = fmt.Sprintf("/posts/all?limit=%d&offset=%d", limit, (offset + limit))
 	}
 
