@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/nsltharaka/newsWaveAggregator/aggregator"
 	"github.com/nsltharaka/newsWaveAggregator/database"
+	"github.com/nsltharaka/newsWaveAggregator/service/auth"
 	"github.com/nsltharaka/newsWaveAggregator/service/feed"
 	"github.com/nsltharaka/newsWaveAggregator/service/followTopicFeed"
 	"github.com/nsltharaka/newsWaveAggregator/service/post"
@@ -39,24 +40,29 @@ func (server *APIServer) Run() error {
 
 	})
 
+	authHandler := auth.NewHandler(server.db)
+
 	// user routes
 	userHandler := user.NewHandler(server.db)
 	router.Mount("/users", userHandler.RegisterRoutes())
 
+	// forgot password routes
+	router.Mount("/auth", authHandler.RegisterRoutes())
+
 	// topic routes
-	topicHandler := topic.NewHandler(server.db)
+	topicHandler := topic.NewHandler(server.db, authHandler)
 	router.Mount("/topics", topicHandler.RegisterRoutes())
 
 	// feed routes
-	feedHandler := feed.NewHandler(server.db)
+	feedHandler := feed.NewHandler(server.db, authHandler)
 	router.Mount("/feeds", feedHandler.RegisterRoutes())
 
 	// follow_topic_feed routes
-	followTopicFeedHandler := followTopicFeed.NewHandler(server.db)
+	followTopicFeedHandler := followTopicFeed.NewHandler(server.db, authHandler)
 	router.Mount("/follow-topic-feed", followTopicFeedHandler.RegisterRoutes())
 
 	// post routes
-	postHandler := post.NewHandler(server.db)
+	postHandler := post.NewHandler(server.db, authHandler)
 	router.Mount("/posts", postHandler.RegisterRoutes())
 
 	// Aggregator start

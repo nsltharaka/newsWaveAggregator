@@ -15,13 +15,15 @@ import (
 type Handler struct {
 	db          *database.Queries
 	imageFinder *topicImages.ImageFinder
+	auth        *auth.Handler
 }
 
-func NewHandler(db *database.Queries) *Handler {
+func NewHandler(db *database.Queries, auth *auth.Handler) *Handler {
 
 	return &Handler{
 		db:          db,
 		imageFinder: topicImages.NewImageFinder(topicImages.FromGoogleImages),
+		auth:        auth,
 	}
 }
 
@@ -29,7 +31,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Use(auth.WithAuthUser(h.db))
+	r.Use(h.auth.WithAuthUser)
 
 	r.Post("/create", h.handleFollowTopicFeed)
 	r.Get("/all", h.handleGetAllFeedsForUser)

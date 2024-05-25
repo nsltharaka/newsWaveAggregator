@@ -18,6 +18,12 @@ type Feed struct {
 	Url       string       `json:"url"`
 }
 
+type ForgotPassword struct {
+	CaseNumber uuid.UUID `json:"case_number"`
+	Opened     bool      `json:"opened"`
+	UserID     int32     `json:"user_id"`
+}
+
 type Post struct {
 	PostID      uuid.UUID      `json:"post_id"`
 	Title       string         `json:"title"`

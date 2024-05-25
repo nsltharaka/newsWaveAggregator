@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -33,16 +34,30 @@ func main() {
 	db := database.New(conn)
 
 	// server setup
-	PORT := os.Getenv("PORT")
-	host, err := os.Hostname()
-	if err != nil {
-		fmt.Println("could not retrieve hostname\n\tusing default value 'localhost'")
-		host = "localhost"
+	// default port
+	port, exists := os.LookupEnv("API_PORT")
+	if !exists {
+		port = "3030"
 	}
 
-	apiServer := api.NewAPIServer(fmt.Sprintf("%s:%s", host, PORT), db)
+	// default host
+	hostname, exists := os.LookupEnv("API_HOST")
+	if !exists {
+		var err error
+		hostname, err = os.Hostname()
+		if err != nil {
+			hostname = "localhost"
+		}
+	}
 
-	fmt.Printf("server started at http://%s:%s\n", host, PORT)
+	apiServer := api.NewAPIServer(fmt.Sprintf("%s:%s", hostname, port), db)
+
+	apiBaseUrl := fmt.Sprintf("http://%s:%s", hostname, port)
+	if err := os.Setenv("API_BASE_URL", apiBaseUrl); err != nil {
+		slog.Warn("setting env variable API_BASE_URL failed")
+	}
+
+	fmt.Printf("server started at %s\n", apiBaseUrl)
 	if err := apiServer.Run(); err != nil {
 		log.Fatal(err)
 	}

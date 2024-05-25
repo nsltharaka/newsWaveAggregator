@@ -16,11 +16,12 @@ import (
 )
 
 type Handler struct {
-	db *database.Queries
+	db   *database.Queries
+	auth *auth.Handler
 }
 
-func NewHandler(db *database.Queries) *Handler {
-	return &Handler{db}
+func NewHandler(db *database.Queries, auth *auth.Handler) *Handler {
+	return &Handler{db, auth}
 }
 
 func (h *Handler) RegisterRoutes() http.Handler {
@@ -28,7 +29,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logger)
-	router.Use(auth.WithAuthUser(h.db))
+	router.Use(h.auth.WithAuthUser)
 
 	router.Get("/all", h.handleGetAllPosts)
 
