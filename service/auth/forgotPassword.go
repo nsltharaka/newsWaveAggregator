@@ -15,6 +15,10 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+var (
+	chnCaseDeleteSignal = make(chan struct{})
+)
+
 func (h *Handler) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	// get user email from the request
 	// example request body
@@ -40,7 +44,7 @@ func (h *Handler) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	// if there is an existing password reset request for the user
 	_, err = h.db.GetCaseForUser(r.Context(), user.ID)
 	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("6-digit code has already been sent to the email address. please try again in 10 minutes"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user cannot send password reset requests more than once in a 10 minutes time frame"))
 		return
 	}
 
@@ -62,9 +66,9 @@ func (h *Handler) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, map[string]string{
+	utils.WriteJSON(w, http.StatusOK, map[string]any{
 		"msg":    fmt.Sprintf("an email with 6-digit code has been sent to %s", payload.Email),
-		"userId": string(user.ID),
+		"userId": user.ID,
 	})
 
 	// reset case get deleted after one minute.
