@@ -11,7 +11,8 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-insert into users(
+insert into
+    users (
         created_at,
         updated_at,
         username,
@@ -19,7 +20,8 @@ insert into users(
         password
     )
 values ($1, $2, $3, $4, $5)
-RETURNING id, created_at, updated_at, username, email, password, api_key
+RETURNING
+    id, created_at, updated_at, username, email, password, api_key
 `
 
 type CreateUserParams struct {
@@ -71,9 +73,7 @@ func (q *Queries) GetUserByApiKey(ctx context.Context, apiKey string) (User, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-select id, created_at, updated_at, username, email, password, api_key
-from users
-where email = $1
+select id, created_at, updated_at, username, email, password, api_key from users where email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -89,4 +89,18 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.ApiKey,
 	)
 	return i, err
+}
+
+const updatePasswordForUser = `-- name: UpdatePasswordForUser :exec
+UPDATE users SET password = $1 WHERE id = $2
+`
+
+type UpdatePasswordForUserParams struct {
+	Password string `json:"password"`
+	ID       int32  `json:"id"`
+}
+
+func (q *Queries) UpdatePasswordForUser(ctx context.Context, arg UpdatePasswordForUserParams) error {
+	_, err := q.db.ExecContext(ctx, updatePasswordForUser, arg.Password, arg.ID)
+	return err
 }

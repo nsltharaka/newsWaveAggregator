@@ -22,7 +22,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	router := chi.NewRouter()
 
 	router.Post("/forgot-password", h.handleForgotPassword)
-	router.Get("/forgot-password", h.handleCase)
+	router.Post("/forgot-password/reset", h.handleCase)
 
 	return router
 

@@ -20,7 +20,7 @@ type Feed struct {
 
 type ForgotPassword struct {
 	CaseNumber uuid.UUID `json:"case_number"`
-	Opened     bool      `json:"opened"`
+	Code       string    `json:"code"`
 	UserID     int32     `json:"user_id"`
 }
 
