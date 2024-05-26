@@ -1,5 +1,6 @@
 -- name: CreateUser :one
-insert into users(
+insert into
+    users (
         created_at,
         updated_at,
         username,
@@ -7,12 +8,14 @@ insert into users(
         password
     )
 values ($1, $2, $3, $4, $5)
-RETURNING *;
+RETURNING
+    *;
 
 -- name: GetUserByApiKey :one
 SELECT * FROM users WHERE api_key = $1;
 
 -- name: GetUserByEmail :one
-select *
-from users
-where email = $1;
+select * from users where email = $1;
+
+-- name: UpdatePasswordForUser :exec
+UPDATE users SET password = $1 WHERE id = $2;

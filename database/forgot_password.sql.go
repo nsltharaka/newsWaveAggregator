@@ -13,30 +13,66 @@ import (
 
 const createPasswordResetCase = `-- name: CreatePasswordResetCase :one
 INSERT INTO
-    forgot_password (case_number, opened, user_id)
-VALUES ($1, $2, $3) RETURNING case_number, opened, user_id
+    forgot_password (case_number, code, user_id)
+VALUES ($1, $2, $3)
+RETURNING
+    case_number, code, user_id
 `
 
 type CreatePasswordResetCaseParams struct {
 	CaseNumber uuid.UUID `json:"case_number"`
-	Opened     bool      `json:"opened"`
+	Code       string    `json:"code"`
 	UserID     int32     `json:"user_id"`
 }
 
 func (q *Queries) CreatePasswordResetCase(ctx context.Context, arg CreatePasswordResetCaseParams) (ForgotPassword, error) {
-	row := q.db.QueryRowContext(ctx, createPasswordResetCase, arg.CaseNumber, arg.Opened, arg.UserID)
+	row := q.db.QueryRowContext(ctx, createPasswordResetCase, arg.CaseNumber, arg.Code, arg.UserID)
 	var i ForgotPassword
-	err := row.Scan(&i.CaseNumber, &i.Opened, &i.UserID)
+	err := row.Scan(&i.CaseNumber, &i.Code, &i.UserID)
+	return i, err
+}
+
+const deleteCase = `-- name: DeleteCase :exec
+DELETE FROM forgot_password WHERE case_number = $1
+`
+
+func (q *Queries) DeleteCase(ctx context.Context, caseNumber uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteCase, caseNumber)
+	return err
+}
+
+const getCaseByNumber = `-- name: GetCaseByNumber :one
+SELECT case_number, code, user_id FROM forgot_password WHERE case_number = $1
+`
+
+func (q *Queries) GetCaseByNumber(ctx context.Context, caseNumber uuid.UUID) (ForgotPassword, error) {
+	row := q.db.QueryRowContext(ctx, getCaseByNumber, caseNumber)
+	var i ForgotPassword
+	err := row.Scan(&i.CaseNumber, &i.Code, &i.UserID)
 	return i, err
 }
 
 const getCaseForUser = `-- name: GetCaseForUser :one
-SELECT case_number, opened, user_id FROM forgot_password WHERE user_id = $1
+SELECT case_number, code, user_id FROM forgot_password WHERE user_id = $1
 `
 
 func (q *Queries) GetCaseForUser(ctx context.Context, userID int32) (ForgotPassword, error) {
 	row := q.db.QueryRowContext(ctx, getCaseForUser, userID)
 	var i ForgotPassword
-	err := row.Scan(&i.CaseNumber, &i.Opened, &i.UserID)
+	err := row.Scan(&i.CaseNumber, &i.Code, &i.UserID)
 	return i, err
+}
+
+const updateCode = `-- name: UpdateCode :exec
+UPDATE forgot_password SET code = $1 WHERE case_number = $2
+`
+
+type UpdateCodeParams struct {
+	Code       string    `json:"code"`
+	CaseNumber uuid.UUID `json:"case_number"`
+}
+
+func (q *Queries) UpdateCode(ctx context.Context, arg UpdateCodeParams) error {
+	_, err := q.db.ExecContext(ctx, updateCode, arg.Code, arg.CaseNumber)
+	return err
 }

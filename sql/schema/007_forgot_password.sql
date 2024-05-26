@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE TABLE forgot_password (
     case_number UUID PRIMARY KEY,
-    opened BOOLEAN NOT NULL,
+    code TEXT NOT NULL,
     user_id INTEGER REFERENCES users (id) NOT NULL
 );
 
