@@ -15,10 +15,6 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-var (
-	chnCaseDeleteSignal = make(chan struct{})
-)
-
 func (h *Handler) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	// get user email from the request
 	// example request body
