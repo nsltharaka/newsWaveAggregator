@@ -39,3 +39,18 @@ ORDER BY p.pub_date DESC -- Order by latest fetched posts first (optional)
 LIMIT $2
 OFFSET
     $3;
+
+-- name: GetAllPostsForTopic :many
+SELECT p.*, f.url AS feed_url
+FROM
+    posts p
+    INNER JOIN feeds f ON p.feed_id = f.id
+    INNER JOIN topic_contains_feed tcf ON f.id = tcf.feed_id
+    INNER JOIN user_follows_topic uft ON tcf.topic_id = uft.topic_id
+WHERE
+    uft.user_id = $1
+    AND tcf.topic_id = $2
+ORDER BY p.pub_date DESC -- Order by latest posts first (optional)
+LIMIT $3
+OFFSET
+    $4;
