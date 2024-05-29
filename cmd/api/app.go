@@ -68,7 +68,7 @@ func (server *APIServer) Run() error {
 	// Aggregator start
 	go func() {
 		fmt.Printf("aggregator started...")
-		aggregator.StartAggregation(2, 1*time.Hour)
+		aggregator.StartAggregation(10, 1*time.Hour)
 	}()
 
 	return http.ListenAndServe(server.addr, router)

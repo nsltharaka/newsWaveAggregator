@@ -27,7 +27,7 @@ func FromGoogleImages(topic string) ([]string, int, error) {
 		imageUrls = append(imageUrls, item.Link)
 	}
 
-	return imageUrls, 1, nil
+	return imageUrls, 0, nil
 
 }
 

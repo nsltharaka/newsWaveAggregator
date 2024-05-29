@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/mmcdole/gofeed"
 	"github.com/nsltharaka/newsWaveAggregator/database"
+	"github.com/sym01/htmlsanitizer"
 )
 
 // StartAggregation is a async function starts the aggregation functionality. `limit` controls the number of feeds for aggregation in one batch. `timeDuration` is the interval between each batch for aggregation.
@@ -92,7 +93,7 @@ func ScrapeFeeds(wg *sync.WaitGroup, db *database.Queries, feed database.Feed) {
 
 		description := sql.NullString{}
 		if item.Description != "" {
-			description.String = item.Description
+			description.String = sanitizeDescription(item.Description)
 			description.Valid = true
 		}
 
@@ -126,4 +127,13 @@ func ScrapeFeeds(wg *sync.WaitGroup, db *database.Queries, feed database.Feed) {
 		}
 	}
 
+}
+
+func sanitizeDescription(description string) string {
+	s := htmlsanitizer.NewHTMLSanitizer()
+	// just set AllowList to nil to disable all tags
+	s.AllowList = nil
+
+	sanitizedHTML, _ := s.SanitizeString(description)
+	return strings.TrimSpace(sanitizedHTML)
 }
