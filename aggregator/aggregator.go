@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -109,12 +110,16 @@ func ScrapeFeeds(wg *sync.WaitGroup, db *database.Queries, feed database.Feed) {
 			imgUrl.Valid = true
 		}
 
+		if item.PublishedParsed == nil {
+			item.PublishedParsed = rssFeed.UpdatedParsed
+		}
+
 		if _, err := db.CreatePost(context.Background(), database.CreatePostParams{
 			PostID:      uuid.New(),
 			Title:       item.Title,
 			Description: description,
 			Author:      authors,
-			PubDate:     *item.PublishedParsed,
+			PubDate:     item.PublishedParsed.UTC(),
 			FetchedAt:   time.Now().UTC(),
 			PostImage:   imgUrl,
 			Url:         item.Link,
@@ -135,5 +140,11 @@ func sanitizeDescription(description string) string {
 	s.AllowList = nil
 
 	sanitizedHTML, _ := s.SanitizeString(description)
-	return strings.TrimSpace(sanitizedHTML)
+
+	re := regexp.MustCompile(`\s+`) // Matches one or more whitespace characters
+	replaced := re.ReplaceAllStringFunc(sanitizedHTML, func(match string) string {
+		return " " // Replace with a single space
+	})
+
+	return strings.TrimSpace(replaced)
 }
