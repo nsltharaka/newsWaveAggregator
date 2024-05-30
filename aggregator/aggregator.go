@@ -136,7 +136,6 @@ func ScrapeFeeds(wg *sync.WaitGroup, db *database.Queries, feed database.Feed) {
 
 func sanitizeDescription(description string) string {
 	s := htmlsanitizer.NewHTMLSanitizer()
-	// just set AllowList to nil to disable all tags
 	s.AllowList = nil
 
 	sanitizedHTML, _ := s.SanitizeString(description)
@@ -146,5 +145,15 @@ func sanitizeDescription(description string) string {
 		return " " // Replace with a single space
 	})
 
-	return strings.TrimSpace(replaced)
+	// remove whitespaces around the string
+	sanitizedHTML = strings.TrimSpace(replaced)
+
+	// shorten description if too long
+	// add "..." to the end
+	if len(sanitizedHTML) > 500 {
+		sanitizedHTML = sanitizedHTML[:500]
+		sanitizedHTML += "..."
+	}
+
+	return sanitizedHTML
 }
