@@ -3,6 +3,7 @@ package feed
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 
 	"github.com/go-chi/chi/v5"
@@ -32,6 +33,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 
 	router.Get("/refresh", h.handleRefresh)
 	router.Get("/verify", h.verifyFeed)
+	router.Get("/count", h.handleGetCount)
 
 	return router
 }
@@ -79,5 +81,21 @@ func (h *Handler) verifyFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.WriteJSON(w, http.StatusOK, response)
+
+}
+
+func (h *Handler) handleGetCount(w http.ResponseWriter, r *http.Request) {
+
+	userId := r.Context().Value(auth.ContextKey("authUser")).(int)
+
+	count, err := h.db.GetFeedsCount(r.Context(), int32(userId))
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("couldn't get feeds count"))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]string{
+		"message": strconv.Itoa(int(count)),
+	})
 
 }

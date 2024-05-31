@@ -3,6 +3,7 @@ package topic
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -30,7 +31,8 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	router.Use(h.auth.WithAuthUser)
 
 	router.Get("/", h.handleGetALlTopicsForUser)
-	router.Get("/all", h.handleGetALlTopics)
+	router.Get("/all", h.handleGetAllTopics)
+	router.Get("/count", h.handleGetCount)
 	router.Get("/{topicId}", h.handleGetTopic)
 	router.Put("/{topicId}", h.handleUpdateTopic)
 	router.Delete("/{topicId}", h.handleUnfollowTopic)
@@ -66,7 +68,7 @@ func (h *Handler) handleGetALlTopicsForUser(w http.ResponseWriter, r *http.Reque
 
 }
 
-func (h *Handler) handleGetALlTopics(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetAllTopics(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("get all topics"))
 }
 
@@ -173,4 +175,20 @@ func (h *Handler) handleUnfollowTopic(w http.ResponseWriter, r *http.Request) {
 		"topic":  topicId,
 		"action": "delete topic",
 	})
+}
+
+func (h *Handler) handleGetCount(w http.ResponseWriter, r *http.Request) {
+
+	userId := r.Context().Value(auth.ContextKey("authUser")).(int)
+
+	count, err := h.db.GetTopicsCount(r.Context(), int32(userId))
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, fmt.Errorf("couldn't get topics count"))
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, map[string]string{
+		"message": strconv.Itoa(int(count)),
+	})
+
 }

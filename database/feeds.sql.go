@@ -134,6 +134,22 @@ func (q *Queries) GetFeedByURL(ctx context.Context, url string) (Feed, error) {
 	return i, err
 }
 
+const getFeedsCount = `-- name: GetFeedsCount :one
+SELECT COUNT(DISTINCT tcf.feed_id) AS total_feeds
+FROM
+    topic_contains_feed tcf
+    INNER JOIN user_follows_topic uft ON tcf.topic_id = uft.topic_id
+WHERE
+    uft.user_id = $1
+`
+
+func (q *Queries) GetFeedsCount(ctx context.Context, userID int32) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getFeedsCount, userID)
+	var total_feeds int64
+	err := row.Scan(&total_feeds)
+	return total_feeds, err
+}
+
 const getFeedsForUserTopic = `-- name: GetFeedsForUserTopic :many
 SELECT f.id, f.url
 FROM

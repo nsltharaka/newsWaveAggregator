@@ -43,3 +43,11 @@ select * from feeds order by updated_at asc nulls first limit $1;
 
 -- name: MarkFeedAsFetched :exec
 UPDATE feeds SET updated_at = now() WHERE id = $1;
+
+-- name: GetFeedsCount :one
+SELECT COUNT(DISTINCT tcf.feed_id) AS total_feeds
+FROM
+    topic_contains_feed tcf
+    INNER JOIN user_follows_topic uft ON tcf.topic_id = uft.topic_id
+WHERE
+    uft.user_id = $1;

@@ -30,3 +30,11 @@ WHERE
 GROUP BY
     t.id
 ORDER BY t.updated_at DESC;
+
+-- name: GetTopicsCount :one
+SELECT COUNT(*) AS total_topics
+FROM
+    user_follows_topic uft
+    INNER JOIN topics t ON uft.topic_id = t.id
+WHERE
+    uft.user_id = $1;

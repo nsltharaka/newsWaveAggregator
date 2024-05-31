@@ -141,6 +141,22 @@ func (q *Queries) GetTopicByName(ctx context.Context, name string) (Topic, error
 	return i, err
 }
 
+const getTopicsCount = `-- name: GetTopicsCount :one
+SELECT COUNT(*) AS total_topics
+FROM
+    user_follows_topic uft
+    INNER JOIN topics t ON uft.topic_id = t.id
+WHERE
+    uft.user_id = $1
+`
+
+func (q *Queries) GetTopicsCount(ctx context.Context, userID int32) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTopicsCount, userID)
+	var total_topics int64
+	err := row.Scan(&total_topics)
+	return total_topics, err
+}
+
 const updateTopicImage = `-- name: UpdateTopicImage :one
 UPDATE topics SET img_url = $1 WHERE name = $2 RETURNING id, name, img_url, updated_at, created_by
 `
