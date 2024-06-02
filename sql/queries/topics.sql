@@ -18,6 +18,7 @@ SELECT * FROM topics WHERE id = $1;
 
 -- name: UpdateTopicImage :one
 UPDATE topics SET img_url = $1 WHERE name = $2 RETURNING *;
+
 -- name: GetAllTopicsForUserWithSourceCount :many
 SELECT t.*, COUNT(DISTINCT tcf.feed_id) AS feed_count
 FROM
@@ -38,3 +39,12 @@ FROM
     INNER JOIN topics t ON uft.topic_id = t.id
 WHERE
     uft.user_id = $1;
+
+-- name: GetTopicsLike :many
+SELECT *
+FROM
+    topics t
+    INNER JOIN user_follows_topic uft on uft.topic_id = t.id
+WHERE
+    uft.user_id = $1
+    AND LOWER(t.name) LIKE LOWER('%' || $2 || '%');

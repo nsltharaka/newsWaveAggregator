@@ -12,6 +12,7 @@ import (
 	"github.com/nsltharaka/newsWaveAggregator/service/feed"
 	"github.com/nsltharaka/newsWaveAggregator/service/followTopicFeed"
 	"github.com/nsltharaka/newsWaveAggregator/service/post"
+	"github.com/nsltharaka/newsWaveAggregator/service/search"
 	"github.com/nsltharaka/newsWaveAggregator/service/topic"
 	"github.com/nsltharaka/newsWaveAggregator/service/user"
 )
@@ -64,6 +65,10 @@ func (server *APIServer) Run() error {
 	// post routes
 	postHandler := post.NewHandler(server.db, authHandler)
 	router.Mount("/posts", postHandler.RegisterRoutes())
+
+	// search routes
+	searchHandler := search.NewHandler(server.db, authHandler)
+	router.Mount("/search", searchHandler.RegisterRoutes())
 
 	// Aggregator start
 	go func() {

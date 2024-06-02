@@ -157,6 +157,62 @@ func (q *Queries) GetTopicsCount(ctx context.Context, userID int32) (int64, erro
 	return total_topics, err
 }
 
+const getTopicsLike = `-- name: GetTopicsLike :many
+SELECT id, name, img_url, updated_at, created_by, user_id, topic_id
+FROM
+    topics t
+    INNER JOIN user_follows_topic uft on uft.topic_id = t.id
+WHERE
+    uft.user_id = $1
+    AND LOWER(t.name) LIKE LOWER('%' || $2 || '%')
+`
+
+type GetTopicsLikeParams struct {
+	UserID  int32          `json:"user_id"`
+	Column2 sql.NullString `json:"column_2"`
+}
+
+type GetTopicsLikeRow struct {
+	ID        uuid.UUID      `json:"id"`
+	Name      string         `json:"name"`
+	ImgUrl    sql.NullString `json:"img_url"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	CreatedBy int32          `json:"created_by"`
+	UserID    int32          `json:"user_id"`
+	TopicID   uuid.UUID      `json:"topic_id"`
+}
+
+func (q *Queries) GetTopicsLike(ctx context.Context, arg GetTopicsLikeParams) ([]GetTopicsLikeRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTopicsLike, arg.UserID, arg.Column2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTopicsLikeRow
+	for rows.Next() {
+		var i GetTopicsLikeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ImgUrl,
+			&i.UpdatedAt,
+			&i.CreatedBy,
+			&i.UserID,
+			&i.TopicID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateTopicImage = `-- name: UpdateTopicImage :one
 UPDATE topics SET img_url = $1 WHERE name = $2 RETURNING id, name, img_url, updated_at, created_by
 `
