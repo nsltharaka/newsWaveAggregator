@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nsltharaka/newsWaveAggregator/database"
 	"github.com/nsltharaka/newsWaveAggregator/service/auth"
+	"github.com/nsltharaka/newsWaveAggregator/types"
 	"github.com/nsltharaka/newsWaveAggregator/utils"
 )
 
@@ -76,10 +77,64 @@ func (h *Handler) handleSearch(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(searchKey, len(topicsForQuery), len(postsForQuery))
 
-	// search results
+	// send search results
+	next := fmt.Sprintf("/search?q=%s&page=%d", searchKey, page+1)
+	if len(postsForQuery) == limit {
+		next = ""
+	}
+
+	topicPayload := []types.OutgoingTopicPayload{}
+	for _, topic := range topicsForQuery {
+
+		imageUrl := ""
+		if topic.ImgUrl.Valid {
+			imageUrl = topic.ImgUrl.String
+		}
+
+		topicPayload = append(topicPayload, types.OutgoingTopicPayload{
+			ID:        topic.ID,
+			Name:      topic.Name,
+			UpdatedAt: topic.UpdatedAt,
+			ImgUrl:    imageUrl,
+		})
+	}
+
+	posts := []types.OutGoingPostPayload{}
+	for _, row := range postsForQuery {
+
+		post := types.OutGoingPostPayload{
+			PostID:      row.PostID,
+			Title:       row.Title,
+			Description: "",
+			Author:      "",
+			PubDate:     row.PubDate,
+			PostImage:   "",
+			Url:         row.Url,
+			FeedID:      row.FeedID,
+			FeedUrl:     row.FeedUrl,
+			Topic:       "",
+		}
+
+		if row.Description.Valid {
+			post.Description = row.Description.String
+		}
+
+		if row.Author.Valid {
+			post.Author = row.Author.String
+		}
+
+		if row.PostImage.Valid {
+			post.PostImage = row.PostImage.String
+		}
+
+		posts = append(posts, post)
+
+	}
+
 	utils.WriteJSON(w, http.StatusOK, map[string]any{
-		"topics": topicsForQuery,
-		"posts":  postsForQuery,
+		"topics": topicPayload,
+		"posts":  posts,
+		"next":   next,
 	})
 
 }

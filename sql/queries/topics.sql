@@ -41,7 +41,7 @@ WHERE
     uft.user_id = $1;
 
 -- name: GetTopicsLike :many
-SELECT *
+SELECT t.*
 FROM
     topics t
     INNER JOIN user_follows_topic uft on uft.topic_id = t.id

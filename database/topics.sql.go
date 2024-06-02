@@ -158,7 +158,7 @@ func (q *Queries) GetTopicsCount(ctx context.Context, userID int32) (int64, erro
 }
 
 const getTopicsLike = `-- name: GetTopicsLike :many
-SELECT id, name, img_url, updated_at, created_by, user_id, topic_id
+SELECT t.id, t.name, t.img_url, t.updated_at, t.created_by
 FROM
     topics t
     INNER JOIN user_follows_topic uft on uft.topic_id = t.id
@@ -172,33 +172,21 @@ type GetTopicsLikeParams struct {
 	Column2 sql.NullString `json:"column_2"`
 }
 
-type GetTopicsLikeRow struct {
-	ID        uuid.UUID      `json:"id"`
-	Name      string         `json:"name"`
-	ImgUrl    sql.NullString `json:"img_url"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	CreatedBy int32          `json:"created_by"`
-	UserID    int32          `json:"user_id"`
-	TopicID   uuid.UUID      `json:"topic_id"`
-}
-
-func (q *Queries) GetTopicsLike(ctx context.Context, arg GetTopicsLikeParams) ([]GetTopicsLikeRow, error) {
+func (q *Queries) GetTopicsLike(ctx context.Context, arg GetTopicsLikeParams) ([]Topic, error) {
 	rows, err := q.db.QueryContext(ctx, getTopicsLike, arg.UserID, arg.Column2)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetTopicsLikeRow
+	var items []Topic
 	for rows.Next() {
-		var i GetTopicsLikeRow
+		var i Topic
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
 			&i.ImgUrl,
 			&i.UpdatedAt,
 			&i.CreatedBy,
-			&i.UserID,
-			&i.TopicID,
 		); err != nil {
 			return nil, err
 		}
