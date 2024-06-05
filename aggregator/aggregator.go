@@ -83,7 +83,7 @@ func ScrapeFeeds(wg *sync.WaitGroup, db *database.Queries, feed database.Feed) {
 	rssParser := gofeed.NewParser()
 	rssFeed, err := rssParser.ParseURLWithContext(feed.Url, ctxWithTimeout)
 	if err != nil {
-		log.Println("error parsing url : ", feed.Url)
+		log.Printf("error parsing url %s : %s", feed.Url, err.Error())
 		return
 	}
 
