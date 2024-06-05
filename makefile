@@ -18,5 +18,8 @@ goose-reset:
 
 goose-update: goose-reset goose-up
 
+goose-data:
+	@goose -dir sql/data postgres "postgres://postgres:root@localhost:5432/aggregatordb?sslmode=disable" up
+
 sc :
 	@sqlc generate
