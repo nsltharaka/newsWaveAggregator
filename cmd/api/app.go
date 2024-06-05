@@ -32,16 +32,13 @@ func NewAPIServer(addr string, db *database.Queries) *APIServer {
 func (server *APIServer) Run() error {
 
 	router := chi.NewRouter()
+	authHandler := auth.NewHandler(server.db)
 
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("running fine"))
 	})
 
-	router.HandleFunc("/refresh", func(w http.ResponseWriter, r *http.Request) {
-
-	})
-
-	authHandler := auth.NewHandler(server.db)
+	router.HandleFunc("GET /user-check", authHandler.WithAuthUser(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})).ServeHTTP)
 
 	// user routes
 	userHandler := user.NewHandler(server.db)
